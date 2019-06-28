@@ -1,0 +1,19 @@
+{
+  "name": "telegram-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon bot/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "PSNjs": "^0.1.2",
+    "cheerio": "^1.0.0-rc.3",
+    "node-html-parser": "^1.1.14",
+    "node-telegram-bot-api": "^0.30.0",
+    "nodemon": "^1.18.10",
+    "request": "^2.88.0"
+  }
+}
