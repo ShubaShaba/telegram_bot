@@ -49,24 +49,20 @@ let kickUsersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
 let backPanel = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
 
 let users = DB.data.userMessageCount;
-let keyboardsGenerator = new Promise(resolve => {
-  for (let key in users) {
-    let promise = bot.getChat(key);
-    promise.then(function(data) {
-      let name = data.first_name + " " + data.last_name;
-      if (key.startsWith("-")) {
-        name = data.title;
-      }
-      usersKeyboard.unshift([{ text: name, callback_data: "CP: user " + key }]);
-      msgUsersKeyboard.unshift([
-        { text: name, callback_data: "CP: msg " + key }
-      ]);
-      kickUsersKeyboard.unshift([
-        { text: name, callback_data: "CP: kick " + key }
-      ]);
-    });
-  }
-});
+for (let key in users) {
+  let promise = bot.getChat(key);
+  promise.then(function(data) {
+    let name = data.first_name + " " + data.last_name;
+    if (key.startsWith("-")) {
+      name = data.title;
+    }
+    usersKeyboard.unshift([{ text: name, callback_data: "CP: user " + key }]);
+    msgUsersKeyboard.unshift([{ text: name, callback_data: "CP: msg " + key }]);
+    kickUsersKeyboard.unshift([
+      { text: name, callback_data: "CP: kick " + key }
+    ]);
+  });
+}
 
 let msgId; //for edit panel
 let idToSend; // for sending message (chat_id)
@@ -112,7 +108,6 @@ bot.on("callback_query", query => {
       editMessage("Control_panel v.1.0 :", id, msgId, msgUsersKeyboard);
     } else if (query.data.startsWith("CP: msg ")) {
       idToSend = query.data.split(" ")[2];
-      module.exports = { idToSend };
       editMessage(
         "sending to: " +
           msgUsersKeyboard.find(
@@ -124,10 +119,7 @@ bot.on("callback_query", query => {
       );
     } else if (query.data === "CP: " + "<=") {
       editMessage("Control_panel v.1.0 :", id, msgId, openKeyboard);
-      if (idToSend != null) {
-        idToSend = null;
-        module.exports = { idToSend };
-      }
+      idToSend = null;
     } else if (query.data === "CP: " + "close panel") {
       editMessage("Panel has been closed", id, msgId, []);
       msgId = null;
@@ -135,4 +127,8 @@ bot.on("callback_query", query => {
   }
 });
 
-module.exports = { idToSend };
+bot.on("text", msg => {
+  if (idToSend != null) {
+    bot.sendMessage(idToSend, msg.text);
+  }
+});

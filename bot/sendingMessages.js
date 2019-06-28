@@ -19,10 +19,3 @@ bot.onText(/\/stopSpam/, function(msg) {
     intervalId = null;
   }
 });
-
-bot.on("text", msg => {
-  const CP = require("./control_panel");
-  if (CP.idToSend != null) {
-    bot.sendMessage(CP.idToSend, msg.text);
-  }
-});
