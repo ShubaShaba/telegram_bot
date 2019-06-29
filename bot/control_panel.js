@@ -15,7 +15,7 @@ const openKeyboard = [
   [
     {
       text: "get user id",
-      callback_data: "CP: " + "get user id"
+      callback_data: "CP: " + "get chat id"
     }
   ],
   [
@@ -43,24 +43,22 @@ const openKeyboard = [
     }
   ]
 ];
-let usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
-let msgUsersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
-let kickUsersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
 let backPanel = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+let chatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+let msgChatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+let usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+let groupKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
 
 let users = DB.data.userMessageCount;
-for (let key in users) {
-  let promise = bot.getChat(key);
-  promise.then(function(data) {
-    let name = data.first_name + " " + data.last_name;
-    if (key.startsWith("-")) {
-      name = data.title;
+
+function createKeyboard(chats, keyboard, callback_key) {
+  chats.forEach(chat => {
+    let name = chat.first_name + " " + chat.last_name;
+    let type = chat.type;
+    if (type === "group" || type === "supergroup") {
+      name = chat.title;
     }
-    usersKeyboard.unshift([{ text: name, callback_data: "CP: user " + key }]);
-    msgUsersKeyboard.unshift([{ text: name, callback_data: "CP: msg " + key }]);
-    kickUsersKeyboard.unshift([
-      { text: name, callback_data: "CP: kick " + key }
-    ]);
+    keyboard.unshift([{ text: name, callback_data: callback_key + chat.id }]);
   });
 }
 
@@ -89,34 +87,37 @@ bot.onText(/\/controlP/, function(msg) {
 bot.on("callback_query", query => {
   if (query.data.startsWith("CP: ")) {
     const id = query.message.chat.id;
-    if (query.data === "CP: " + "get user id") {
-      //
-      editMessage("Control_panel v.1.0 :", id, msgId, usersKeyboard);
-      //
-    } else if (query.data.startsWith("CP: user ")) {
-      //
+    if (query.data === "CP: " + "get chat id") {
+      Promise.all(Object.keys(users).map(key => bot.getChat(key)))
+        .then(chats => {
+          createKeyboard(chats, chatsKeyboard, "CP: chat ");
+        })
+        .then(result => {
+          editMessage("Control_panel v.1.0 :", id, msgId, chatsKeyboard);
+        });
+    } else if (query.data.startsWith("CP: chat ")) {
       bot.sendMessage(id, query.data.split(" ")[2]);
-      //
-    } else if (query.data === "CP: " + "kick user") {
-      //
-      editMessage("Control_panel v.1.0 :", id, msgId, kickUsersKeyboard);
-      //
-    } else if (query.data.startsWith("CP: kick ")) {
-      //
-      //
     } else if (query.data === "CP: " + "sendMessage") {
-      editMessage("Control_panel v.1.0 :", id, msgId, msgUsersKeyboard);
+      Promise.all(Object.keys(users).map(key => bot.getChat(key)))
+        .then(chats => {
+          createKeyboard(chats, msgChatsKeyboard, "CP: msg ");
+        })
+        .then(result => {
+          editMessage("Control_panel v.1.0 :", id, msgId, msgChatsKeyboard);
+        });
     } else if (query.data.startsWith("CP: msg ")) {
       idToSend = query.data.split(" ")[2];
       editMessage(
         "sending to: " +
-          msgUsersKeyboard.find(
+          msgChatsKeyboard.find(
             item => item[0].callback_data === "CP: msg " + idToSend
           )[0].text,
         id,
         msgId,
         backPanel
       );
+    } else if (query.data === "CP: " + "kick user") {
+    } else if (query.data.startsWith("CP: kick ")) {
     } else if (query.data === "CP: " + "<=") {
       editMessage("Control_panel v.1.0 :", id, msgId, openKeyboard);
       idToSend = null;
@@ -132,3 +133,64 @@ bot.on("text", msg => {
     bot.sendMessage(idToSend, msg.text);
   }
 });
+
+//-
+//-
+//-
+//
+// let keyboardGenerator = Promise.all(
+//   Object.keys(users).map(key => bot.getChat(key))
+// ).then(chats => {
+//   chats.forEach(chat => {
+//     let name = chat.first_name + " " + chat.last_name;
+//     let type = chat.type;
+//     if (type === "group" || type === "supergroup") {
+//       name = chat.title;
+//     }
+//     chatsKeyboard.unshift([
+//       { text: name, callback_data: "CP: chat " + chat.id }
+//     ]);
+//     msgChatsKeyboard.unshift([
+//       { text: name, callback_data: "CP: msg " + chat.id }
+//     ]);
+//     if (type === "group" || type === "supergroup") {
+//       groupKeyboard.unshift([
+//         { text: name, callback_data: "CP: group " + chat.id }
+//       ]);
+//     } else {
+//       usersKeyboard.unshift([
+//         { text: name, callback_data: "CP: kick " + chat.id }
+//       ]);
+//     }
+//   });
+// });
+
+// keyboardGenerator.then(result => {
+//   let userId = [];
+//   let groupId = [];
+//   for (let i = 0; i < usersKeyboard.length - 1; i++) {
+//     userId.push(usersKeyboard[i][0].callback_data.split(" ")[2]);
+//   }
+//   for (let g = 0; g < groupKeyboard.length - 1; g++) {
+//     groupId.push(groupKeyboard[g][0].callback_data.split(" ")[2]);
+//   }
+//   usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+//   userId.forEach(function(user) {
+//     for (let g = 0; g < groupId.length; g++) {
+//       bot.getChatMember(groupId[g], user).then(function(data) {
+//         if (data.status === "member") {
+//           let name = data.user.first_name + " " + data.user.last_name;
+//           let title = groupKeyboard.find(
+//             item => item[0].callback_data === "CP: group " + groupId[g]
+//           )[0].text;
+//           usersKeyboard.unshift([
+//             {
+//               text: name + " " + title,
+//               callback_data: "CP: kick " + user + " " + groupId[g]
+//             }
+//           ]);
+//         }
+//       });
+//     }
+//   });
+// });
