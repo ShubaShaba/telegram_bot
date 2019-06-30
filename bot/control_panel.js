@@ -1,16 +1,6 @@
 const DB = require("./database");
 //kick user
 //spam to
-function editMessage(newText, chatId, msgId, keyboard) {
-  bot.editMessageText(newText, {
-    chat_id: chatId,
-    message_id: msgId,
-    reply_markup: {
-      inline_keyboard: keyboard
-    }
-  });
-}
-
 const openKeyboard = [
   [
     {
@@ -62,6 +52,25 @@ function createKeyboard(chats, keyboard, callback_key) {
   });
 }
 
+function createCurrentKeyboard(chat, keyboard, callback_key) {
+  let name = chat.first_name + " " + chat.last_name;
+  let type = chat.type;
+  if (type === "group" || type === "supergroup") {
+    name = chat.title;
+  }
+  keyboard.unshift([{ text: name, callback_data: callback_key + chat.id }]);
+}
+
+function editMessage(newText, chatId, msgId, keyboard) {
+  bot.editMessageText(newText, {
+    chat_id: chatId,
+    message_id: msgId,
+    reply_markup: {
+      inline_keyboard: keyboard
+    }
+  });
+}
+
 let msgId; //for edit panel
 let idToSend; // for sending message (chat_id)
 
@@ -88,6 +97,7 @@ bot.on("callback_query", query => {
   if (query.data.startsWith("CP: ")) {
     const id = query.message.chat.id;
     if (query.data === "CP: " + "get chat id") {
+      chatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
       Promise.all(Object.keys(users).map(key => bot.getChat(key)))
         .then(chats => {
           createKeyboard(chats, chatsKeyboard, "CP: chat ");
@@ -98,6 +108,7 @@ bot.on("callback_query", query => {
     } else if (query.data.startsWith("CP: chat ")) {
       bot.sendMessage(id, query.data.split(" ")[2]);
     } else if (query.data === "CP: " + "sendMessage") {
+      msgChatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
       Promise.all(Object.keys(users).map(key => bot.getChat(key)))
         .then(chats => {
           createKeyboard(chats, msgChatsKeyboard, "CP: msg ");
@@ -117,6 +128,18 @@ bot.on("callback_query", query => {
         backPanel
       );
     } else if (query.data === "CP: " + "kick user") {
+      groupKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+      Promise.all(Object.keys(users).map(key => bot.getChat(key)))
+        .then(chats => {
+          chats.forEach(chat => {
+            if (chat.type === "supergroup" || chat.type === "group") {
+              createCurrentKeyboard(chat, groupKeyboard, "CP: kick ");
+            }
+          });
+        })
+        .then(result => {
+          editMessage("Control_panel v.1.0 :", id, msgId, groupKeyboard);
+        });
     } else if (query.data.startsWith("CP: kick ")) {
     } else if (query.data === "CP: " + "<=") {
       editMessage("Control_panel v.1.0 :", id, msgId, openKeyboard);
