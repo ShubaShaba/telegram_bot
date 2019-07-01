@@ -1,5 +1,5 @@
 const fs = require("fs");
-const MC = require("./Marcov_chain");
+const MC = require("./Markov_chain");
 const getPhrase = require("./Phrases");
 
 const phrases = {
@@ -104,34 +104,19 @@ const comunismText = fs.readdirSync("bot/stuff");
 
 bot.onText(/\/getCommunismStory/, function(msg) {
   const chatId = msg.chat.id;
+  let keyboard = [];
+  comunismText.forEach(function(text) {
+    keyboard.push([
+      {
+        text: text,
+        callback_data: "story: " + text
+      }
+    ]);
+  });
+
   bot.sendMessage(chatId, getPhrase(chatId, "whatStuffOfStory"), {
     reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: comunismText[0],
-            callback_data: "story: " + comunismText[0]
-          }
-        ],
-        [
-          {
-            text: comunismText[1],
-            callback_data: "story: " + comunismText[1]
-          }
-        ],
-        [
-          {
-            text: comunismText[2],
-            callback_data: "story: " + comunismText[2]
-          }
-        ],
-        [
-          {
-            text: comunismText[3],
-            callback_data: "story: " + comunismText[3]
-          }
-        ]
-      ]
+      inline_keyboard: keyboard
     }
   });
 });

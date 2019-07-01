@@ -1,5 +1,4 @@
 const DB = require("./database");
-//kick user
 //spam to
 const openKeyboard = [
   [
@@ -182,6 +181,7 @@ bot.on("callback_query", query => {
           });
         });
     } else if (query.data.startsWith("CP: kick ")) {
+      bot.kickChatMember(query.data.split(" ")[3], query.data.split(" ")[2]);
     } else if (query.data === "CP: " + "<=") {
       editMessage("Control_panel v.1.0 :", id, msgId, openKeyboard);
       idToSend = null;
