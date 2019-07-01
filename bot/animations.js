@@ -1,3 +1,4 @@
+const getPhrase = require("./Phrases");
 const stick = {
   stick_1: [
     "────────██────────",
@@ -38,8 +39,8 @@ const animation = [
 
 bot.onText(/\/start_animation/, function(msg) {
   const chatId = msg.chat.id;
-  if (chatId === msg.from.id) {
-    bot.sendMessage(chatId, "TestAnimation").then(ms => {
+  if (msg.chat.type === "private") {
+    bot.sendMessage(chatId, "...").then(ms => {
       let msgId = ms.message_id;
       let i = 0;
       let intervalAnimation = setInterval(function() {
@@ -62,6 +63,6 @@ bot.onText(/\/start_animation/, function(msg) {
       });
     });
   } else {
-    bot.sendMessage(chatId, "Available only in private chat");
+    bot.sendMessage(chatId, getPhrase(chatId, "animationErr"));
   }
 });

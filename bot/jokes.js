@@ -70,7 +70,7 @@ const photos = {
 bot.on("text", function(msg) {
   const chatId = msg.chat.id;
   const mText = msg.text.toLowerCase();
-  if (chatId !== msg.from.id) {
+  if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
     let section;
     let result;
     for (let key in phrases) {
@@ -101,7 +101,6 @@ bot.on("text", function(msg) {
 });
 
 const comunismText = fs.readdirSync("bot/stuff");
-
 bot.onText(/\/getCommunismStory/, function(msg) {
   const chatId = msg.chat.id;
   let keyboard = [];

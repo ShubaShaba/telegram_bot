@@ -11,9 +11,9 @@ bot.on("text", function(msg) {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const banPhrases = ["артур пидор", "артур пидарас"];
-  if (chatId !== userId) {
+  if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
     const result = banPhrases.find(item => Mtext.toLowerCase().includes(item));
-    if (result !== undefined) {
+    if (result != null) {
       bot.sendMessage(chatId, getPhrase(chatId, "banfor") + result + ";");
       setTimeout(function() {
         bot.kickChatMember(chatId, userId);

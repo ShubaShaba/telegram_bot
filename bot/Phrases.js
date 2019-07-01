@@ -77,6 +77,10 @@ const phrases = {
   whatStuffOfStory: {
     en: "What to use as a source?",
     ru: "Что использовать в качестве источника?"
+  },
+  animationErr: {
+    en: "Available only in private chat",
+    ru: "Доступно только в приватном чате"
   }
 };
 

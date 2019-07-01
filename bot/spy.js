@@ -1,39 +1,22 @@
 bot.on("message", msg => {
   const ChatIdToSend = -361514115;
   const chatId = msg.chat.id;
+  const fromId = msg.from.id;
+  const msgId = msg.message_id;
 
-  let chatName = msg.chat.first_name;
-  const chatUser = msg.chat.username;
-  if (String(chatId).startsWith("-")) {
+  let chatName = msg.chat.first_name + " " + msg.chat.username;
+  if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
     chatName = msg.chat.title;
   }
-
   const fromName = msg.from.first_name;
   const fromSecondName = msg.from.last_name;
   const fromUser = msg.from.username;
+  let Mtext = msg.text;
 
-  const Mtext = msg.text;
-  bot.sendMessage(
-    ChatIdToSend,
-    "Chat: " +
-      chatName +
-      ", " +
-      chatUser +
-      ";\nFrom: " +
-      fromName +
-      " " +
-      fromSecondName +
-      ", " +
-      fromUser +
-      ";\nText: " +
-      Mtext
-  );
-  console.log(msg.chat.id + ": ");
+  console.log(chatId + ", " + fromId + "\n" + msgId);
   console.log(
     "Chat: " +
       chatName +
-      ", " +
-      chatUser +
       ";\nFrom: " +
       fromName +
       " " +
@@ -43,4 +26,51 @@ bot.on("message", msg => {
       ";\nText: " +
       Mtext
   );
+
+  if (Mtext == null) {
+    Mtext = "";
+    bot
+      .sendMessage(
+        ChatIdToSend,
+        "Chat: " +
+          chatName +
+          ": " +
+          chatId +
+          ";\nFrom: " +
+          fromName +
+          " " +
+          fromSecondName +
+          ", " +
+          fromUser +
+          ": " +
+          fromId +
+          "\nMessage: " +
+          msgId +
+          ";\nText: " +
+          Mtext
+      )
+      .then(sent => {
+        bot.forwardMessage(ChatIdToSend, chatId, msgId);
+      });
+  } else {
+    bot.sendMessage(
+      ChatIdToSend,
+      "Chat: " +
+        chatName +
+        ": " +
+        chatId +
+        ";\nFrom: " +
+        fromName +
+        " " +
+        fromSecondName +
+        ", " +
+        fromUser +
+        ": " +
+        fromId +
+        "\nMessage: " +
+        msgId +
+        ";\nText: " +
+        Mtext
+    );
+  }
 });
