@@ -129,16 +129,57 @@ bot.on("callback_query", query => {
       );
     } else if (query.data === "CP: " + "kick user") {
       groupKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+      usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
       Promise.all(Object.keys(users).map(key => bot.getChat(key)))
         .then(chats => {
           chats.forEach(chat => {
             if (chat.type === "supergroup" || chat.type === "group") {
-              createCurrentKeyboard(chat, groupKeyboard, "CP: kick ");
+              createCurrentKeyboard(chat, groupKeyboard, "CP: group ");
+            } else {
+              createCurrentKeyboard(chat, usersKeyboard, "CP: kick ");
             }
           });
         })
         .then(result => {
-          editMessage("Control_panel v.1.0 :", id, msgId, groupKeyboard);
+          let userId = [];
+          let groupId = [];
+          for (let i = 0; i < usersKeyboard.length - 1; i++) {
+            userId.push(usersKeyboard[i][0].callback_data.split(" ")[2]);
+          }
+          for (let g = 0; g < groupKeyboard.length - 1; g++) {
+            groupId.push(groupKeyboard[g][0].callback_data.split(" ")[2]);
+          }
+
+          usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+          let usersInGroup = [];
+          new Promise((resolve, reject) => {
+            userId.forEach(key => {
+              for (let g = 0; g < groupId.length; g++) {
+                bot.getChatMember(groupId[g], key).then(data => {
+                  usersInGroup.push(data);
+                  if (data.status === "member") {
+                    let name = data.user.first_name + " " + data.user.last_name;
+                    let title = groupKeyboard.find(
+                      item =>
+                        item[0].callback_data === "CP: group " + groupId[g]
+                    )[0].text;
+                    usersKeyboard.unshift([
+                      {
+                        text: name + " " + title,
+                        callback_data:
+                          "CP: kick " + data.user.id + " " + groupId[g]
+                      }
+                    ]);
+                  }
+                  if (usersInGroup.length === groupId.length * userId.length) {
+                    resolve(usersInGroup);
+                  }
+                });
+              }
+            });
+          }).then(result => {
+            editMessage("Control_panel v.1.0 :", id, msgId, usersKeyboard);
+          });
         });
     } else if (query.data.startsWith("CP: kick ")) {
     } else if (query.data === "CP: " + "<=") {
@@ -156,64 +197,3 @@ bot.on("text", msg => {
     bot.sendMessage(idToSend, msg.text);
   }
 });
-
-//-
-//-
-//-
-//
-// let keyboardGenerator = Promise.all(
-//   Object.keys(users).map(key => bot.getChat(key))
-// ).then(chats => {
-//   chats.forEach(chat => {
-//     let name = chat.first_name + " " + chat.last_name;
-//     let type = chat.type;
-//     if (type === "group" || type === "supergroup") {
-//       name = chat.title;
-//     }
-//     chatsKeyboard.unshift([
-//       { text: name, callback_data: "CP: chat " + chat.id }
-//     ]);
-//     msgChatsKeyboard.unshift([
-//       { text: name, callback_data: "CP: msg " + chat.id }
-//     ]);
-//     if (type === "group" || type === "supergroup") {
-//       groupKeyboard.unshift([
-//         { text: name, callback_data: "CP: group " + chat.id }
-//       ]);
-//     } else {
-//       usersKeyboard.unshift([
-//         { text: name, callback_data: "CP: kick " + chat.id }
-//       ]);
-//     }
-//   });
-// });
-
-// keyboardGenerator.then(result => {
-//   let userId = [];
-//   let groupId = [];
-//   for (let i = 0; i < usersKeyboard.length - 1; i++) {
-//     userId.push(usersKeyboard[i][0].callback_data.split(" ")[2]);
-//   }
-//   for (let g = 0; g < groupKeyboard.length - 1; g++) {
-//     groupId.push(groupKeyboard[g][0].callback_data.split(" ")[2]);
-//   }
-//   usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
-//   userId.forEach(function(user) {
-//     for (let g = 0; g < groupId.length; g++) {
-//       bot.getChatMember(groupId[g], user).then(function(data) {
-//         if (data.status === "member") {
-//           let name = data.user.first_name + " " + data.user.last_name;
-//           let title = groupKeyboard.find(
-//             item => item[0].callback_data === "CP: group " + groupId[g]
-//           )[0].text;
-//           usersKeyboard.unshift([
-//             {
-//               text: name + " " + title,
-//               callback_data: "CP: kick " + user + " " + groupId[g]
-//             }
-//           ]);
-//         }
-//       });
-//     }
-//   });
-// });
