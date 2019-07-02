@@ -41,12 +41,14 @@ bot.onText(/\/start/, function start(msg) {
   if (msg.text == "/start") {
     const chatId = msg.chat.id;
     let startComandsPack = comands.start_section_for_users.join("; \n");
-    bot.sendMessage(chatId, getPhrase(chatId, "hello")).then(sent => {
-      bot.sendMessage(
-        chatId,
-        getPhrase(chatId, "comandsList") + "\n" + startComandsPack
+    bot
+      .sendMessage(chatId, getPhrase(chatId, "hello"))
+      .then(sent =>
+        bot.sendMessage(
+          chatId,
+          getPhrase(chatId, "comandsList") + "\n" + startComandsPack
+        )
       );
-    });
   }
 });
 

@@ -86,9 +86,7 @@ bot.onText(/\/controlP/, function(msg) {
           inline_keyboard: openKeyboard
         }
       })
-      .then(ms => {
-        msgId = ms.message_id;
-      });
+      .then(ms => (msgId = ms.message_id));
   }
 });
 

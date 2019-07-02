@@ -15,16 +15,7 @@ bot.on("message", msg => {
 
   console.log(chatId + ", " + fromId + "\n" + msgId);
   console.log(
-    "Chat: " +
-      chatName +
-      ";\nFrom: " +
-      fromName +
-      " " +
-      fromSecondName +
-      ", " +
-      fromUser +
-      ";\nText: " +
-      Mtext
+    `Chat: ${chatName};\nFrom: ${fromName} ${fromSecondName}, ${fromUser};\nText: ${Mtext}`
   );
 
   if (Mtext == null) {
@@ -32,26 +23,9 @@ bot.on("message", msg => {
     bot
       .sendMessage(
         ChatIdToSend,
-        "Chat: " +
-          chatName +
-          ": " +
-          chatId +
-          ";\nFrom: " +
-          fromName +
-          " " +
-          fromSecondName +
-          ", " +
-          fromUser +
-          ": " +
-          fromId +
-          "\nMessage: " +
-          msgId +
-          ";\nText: " +
-          Mtext
+        `Chat: ${chatName}: ${chatId};\nFrom: ${fromName} ${fromSecondName}, ${fromUser}: ${fromId}\nMessage: ${msgId};\nText: ${Mtext}`
       )
-      .then(sent => {
-        bot.forwardMessage(ChatIdToSend, chatId, msgId);
-      });
+      .then(sent => bot.forwardMessage(ChatIdToSend, chatId, msgId));
   } else {
     bot.sendMessage(
       ChatIdToSend,
