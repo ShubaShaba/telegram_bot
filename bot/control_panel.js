@@ -5,19 +5,19 @@ const openKeyboard = [
   [
     {
       text: "get user id",
-      callback_data: "CP: " + "getChatId"
+      callback_data: queryPrefix + "getChatId"
     }
   ],
   [
     {
       text: "kick user",
-      callback_data: "CP: " + "kickUser"
+      callback_data: queryPrefix + "kickUser"
     }
   ],
   [
     {
       text: "send message",
-      callback_data: "CP: " + "sendMessage"
+      callback_data: queryPrefix + "sendMessage"
     }
   ],
   [
@@ -29,7 +29,7 @@ const openKeyboard = [
   [
     {
       text: "close panel",
-      callback_data: "CP: " + "closePanel"
+      callback_data: queryPrefix + "closePanel"
     }
   ]
 ];
@@ -80,18 +80,17 @@ bot.onText(/\/controlP/, function(msg) {
 });
 
 bot.on("callback_query", query => {
-  let msgId = query.message.message_id;
-
   if (!query.data.startsWith(queryPrefix)) {
     return;
   }
 
+  let msgId = query.message.message_id;
   const cmd = query.data.substring(queryPrefix.length);
   const parts = cmd.split(" ");
   const cmdName = parts[0];
   const args = parts.slice(0);
-
   const id = query.message.chat.id;
+
   if (cmdName === "getChatId") {
     chatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
     Promise.all(Object.keys(userMessageCount).map(key => bot.getChat(key)))
@@ -102,7 +101,7 @@ bot.on("callback_query", query => {
         editMessage("Control_panel v.1.0 :", id, msgId, chatsKeyboard);
       });
   } else if (cmdName === "chat") {
-    bot.sendMessage(id, args[0]);
+    bot.sendMessage(id, args[1]);
   } else if (cmdName === "sendMessage") {
     msgChatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
     Promise.all(Object.keys(userMessageCount).map(key => bot.getChat(key)))
@@ -113,12 +112,7 @@ bot.on("callback_query", query => {
         editMessage("Control_panel v.1.0 :", id, msgId, msgChatsKeyboard);
       });
   } else if (cmdName === "msg") {
-    console.log(
-      msgChatsKeyboard.find(
-        item => item[0].callback_data === "CP: msg " + idToSend
-      )[0].text
-    );
-    idToSend = args[0];
+    idToSend = args[1];
     editMessage(
       "sending to: " +
         msgChatsKeyboard.find(
@@ -177,13 +171,12 @@ bot.on("callback_query", query => {
         });
       });
   } else if (cmdName === "kick") {
-    bot.kickChatMember(args[1], args[0]);
+    bot.kickChatMember(args[2], args[1]);
   } else if (cmdName === "<=") {
     editMessage("Control_panel v.1.0 :", id, msgId, openKeyboard);
     idToSend = null;
   } else if (cmdName === "closePanel") {
     editMessage("Panel has been closed", id, msgId, []);
-    console.log("hello");
   }
 });
 

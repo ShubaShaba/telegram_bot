@@ -18,7 +18,11 @@ bot.on("message", msg => {
     `Chat: ${chatName};\nFrom: ${fromName} ${fromSecondName}, ${fromUser};\nText: ${Mtext}`
   );
 
-  if (Mtext == null) {
+  if (
+    Mtext == null &&
+    msg.new_chat_members == null &&
+    msg.left_chat_member == null
+  ) {
     Mtext = "";
     bot
       .sendMessage(
@@ -27,24 +31,12 @@ bot.on("message", msg => {
       )
       .then(sent => bot.forwardMessage(ChatIdToSend, chatId, msgId));
   } else {
+    if (msg.new_chat_members != null || msg.left_chat_member != null) {
+      Mtext = "event";
+    }
     bot.sendMessage(
       ChatIdToSend,
-      "Chat: " +
-        chatName +
-        ": " +
-        chatId +
-        ";\nFrom: " +
-        fromName +
-        " " +
-        fromSecondName +
-        ", " +
-        fromUser +
-        ": " +
-        fromId +
-        "\nMessage: " +
-        msgId +
-        ";\nText: " +
-        Mtext
+      `Chat: ${chatName}: ${chatId};\nFrom: ${fromName} ${fromSecondName}, ${fromUser}: ${fromId}\nMessage: ${msgId};\nText: ${Mtext}`
     );
   }
 });
