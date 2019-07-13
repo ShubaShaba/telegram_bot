@@ -1,6 +1,17 @@
 const DB = require("./database");
 //spam to
 const queryPrefix = "CP: ";
+const version = "beta v.0.5";
+
+let panelMessage = {
+  default: "Control panel " + version,
+  getChatId: "Get user's id: ",
+  kickUser: "Kick user: ",
+  sendMessage: "Sending to: ",
+  msg: "Sending to: ",
+  closePanel: "Panel has been closed"
+};
+
 const openKeyboard = [
   [
     {
@@ -20,26 +31,26 @@ const openKeyboard = [
       callback_data: queryPrefix + "sendMessage"
     }
   ],
+  // [
+  //   {
+  //     text: 0,
+  //     callback_data: 0
+  //   }
+  // ],
   [
     {
-      text: 0,
-      callback_data: 0
-    }
-  ],
-  [
-    {
-      text: "close panel",
+      text: "CLOSE PANEL",
       callback_data: queryPrefix + "closePanel"
     }
   ]
 ];
-let backPanel = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
-let chatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
-let msgChatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
-let usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
-let groupKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
 
 let userMessageCount = DB.data.userMessageCount;
+
+function createDefaultKeyboard() {
+  let keyboard = [[{ text: "<=", callback_data: queryPrefix + "default" }]];
+  return keyboard;
+}
 
 function createKeyboard(chats, keyboard, callback_key) {
   chats.forEach(chat => {
@@ -71,7 +82,7 @@ let idToSend; // for sending message (chat_id)
 bot.onText(/\/controlP/, function(msg) {
   const chatId = msg.chat.id;
   if (chatId === 462509174) {
-    bot.sendMessage(chatId, "Control_panel v.1.0 :", {
+    bot.sendMessage(chatId, panelMessage.default, {
       reply_markup: {
         inline_keyboard: openKeyboard
       }
@@ -92,46 +103,57 @@ bot.on("callback_query", query => {
   const id = query.message.chat.id;
 
   if (cmdName === "getChatId") {
-    chatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+    let chatsKeyboard = createDefaultKeyboard();
+
     Promise.all(Object.keys(userMessageCount).map(key => bot.getChat(key)))
       .then(chats => {
-        createKeyboard(chats, chatsKeyboard, "CP: chat ");
+        createKeyboard(chats, chatsKeyboard, queryPrefix + "chat ");
       })
       .then(result => {
-        editMessage("Control_panel v.1.0 :", id, msgId, chatsKeyboard);
+        editMessage(panelMessage[cmdName], id, msgId, chatsKeyboard);
       });
   } else if (cmdName === "chat") {
     bot.sendMessage(id, args[1]);
   } else if (cmdName === "sendMessage") {
-    msgChatsKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+    let msgChatsKeyboard = createDefaultKeyboard();
+
     Promise.all(Object.keys(userMessageCount).map(key => bot.getChat(key)))
       .then(chats => {
-        createKeyboard(chats, msgChatsKeyboard, "CP: msg ");
+        createKeyboard(chats, msgChatsKeyboard, queryPrefix + "msg ");
       })
       .then(result => {
-        editMessage("Control_panel v.1.0 :", id, msgId, msgChatsKeyboard);
+        editMessage(panelMessage[cmdName], id, msgId, msgChatsKeyboard);
       });
   } else if (cmdName === "msg") {
+    let listOfChats = [];
     idToSend = args[1];
-    editMessage(
-      "sending to: " +
-        msgChatsKeyboard.find(
-          item => item[0].callback_data === "CP: msg " + idToSend
-        )[0].text,
-      id,
-      msgId,
-      backPanel
-    );
+
+    Promise.all(Object.keys(userMessageCount).map(key => bot.getChat(key)))
+      .then(chats => {
+        createKeyboard(chats, listOfChats, queryPrefix + "msg ");
+      })
+      .then(result => {
+        editMessage(
+          panelMessage[cmdName] +
+            listOfChats.find(
+              item => item[0].callback_data === queryPrefix + "msg " + idToSend
+            )[0].text,
+          id,
+          msgId,
+          createDefaultKeyboard()
+        );
+      });
   } else if (cmdName === "kickUser") {
-    groupKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
-    usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+    groupKeyboard = createDefaultKeyboard();
+    usersKeyboard = createDefaultKeyboard();
+
     Promise.all(Object.keys(userMessageCount).map(key => bot.getChat(key)))
       .then(chats => {
         chats.forEach(chat => {
           if (chat.type === "supergroup" || chat.type === "group") {
-            createCurrentKeyboard(chat, groupKeyboard, "CP: group ");
+            createCurrentKeyboard(chat, groupKeyboard, queryPrefix + "group ");
           } else {
-            createCurrentKeyboard(chat, usersKeyboard, "CP: kick ");
+            createCurrentKeyboard(chat, usersKeyboard, queryPrefix + "kick ");
           }
         });
       })
@@ -145,7 +167,8 @@ bot.on("callback_query", query => {
           groupId.push(groupKeyboard[g][0].callback_data.split(" ")[2]);
         }
 
-        usersKeyboard = [[{ text: "<=", callback_data: "CP: " + "<=" }]];
+        usersKeyboard = createDefaultKeyboard();
+
         let usersInGroup = [];
         userId.forEach(key => {
           for (let g = 0; g < groupId.length; g++) {
@@ -154,17 +177,20 @@ bot.on("callback_query", query => {
               if (data.status === "member") {
                 let name = data.user.first_name + " " + data.user.last_name;
                 let title = groupKeyboard.find(
-                  item => item[0].callback_data === "CP: group " + groupId[g]
+                  item =>
+                    item[0].callback_data ===
+                    queryPrefix + "group " + groupId[g]
                 )[0].text;
                 usersKeyboard.unshift([
                   {
                     text: name + " " + title,
-                    callback_data: "CP: kick " + data.user.id + " " + groupId[g]
+                    callback_data:
+                      queryPrefix + "kick " + data.user.id + " " + groupId[g]
                   }
                 ]);
               }
               if (usersInGroup.length === groupId.length * userId.length) {
-                editMessage("Control_panel v.1.0 :", id, msgId, usersKeyboard);
+                editMessage(panelMessage[cmdName], id, msgId, usersKeyboard);
               }
             });
           }
@@ -172,11 +198,11 @@ bot.on("callback_query", query => {
       });
   } else if (cmdName === "kick") {
     bot.kickChatMember(args[2], args[1]);
-  } else if (cmdName === "<=") {
-    editMessage("Control_panel v.1.0 :", id, msgId, openKeyboard);
+  } else if (cmdName === "default") {
+    editMessage(panelMessage[cmdName], id, msgId, openKeyboard);
     idToSend = null;
   } else if (cmdName === "closePanel") {
-    editMessage("Panel has been closed", id, msgId, []);
+    editMessage(panelMessage[cmdName], id, msgId, []);
   }
 });
 
